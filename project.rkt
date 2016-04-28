@@ -14,7 +14,7 @@
       (context-set-fgcolor! current-color))))
 
 (define generate-steps
-  (let ([orthogonal (compose (r-s mod 360) (r-s + 90))]
+  (let* ([orthogonal (compose (r-s mod 360) (r-s + 90))]
          [next-steps
           (lambda (lst)
             (append lst (map orthogonal (reverse lst))))])
