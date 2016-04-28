@@ -39,7 +39,7 @@
        (error "move-dragon: The following is not u,d,l,r:" step)]
       )))
 
-(define dragon-curve-turtle
+(define dragon-curve
   (lambda (col row dir iterations)
     (turtle-teleport! dragon col row)
     (map move-dragon (generate-steps (list dir) iterations))
@@ -47,12 +47,13 @@
 
 (define clear
   (lambda (image)
+    (let ([current-color (context-get-fgcolor)])
     (context-set-fgcolor! (irgb 0 0 0))
     (image-select-all! image)
     (image-fill-selection! image)
     (image-select-nothing! image)
-    (context-set-fgcolor! (irgb 255 255 255))
-    ))
+    (context-set-fgcolor! current-color)
+    )))
 
 
 (define side-length 20)
