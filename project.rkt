@@ -35,8 +35,9 @@
       (for-each move-dragon
                 (generate-steps iterations)))))
 
+;aspect-ratio is horizontal / vertical
 (define n-star
-  (lambda (image n col row radius angle)
+  (lambda (image n col row radius angle aspect-ratio)
     (let* ([rad-angle (degrees->radians angle)]
            [interior-angle (/ (* 2 pi) n)]
            [angles (map (compose
@@ -46,7 +47,7 @@
            [draw-spokes
             (lambda (theta)
               (image-draw-line! image col row
-                                (+ col (* radius (sin theta)))
+                                (+ col (*  radius (sin theta) aspect-ratio))
                                 (+ row (* radius (cos theta)))))])
       (for-each draw-spokes angles))))
 
