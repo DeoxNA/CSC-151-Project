@@ -47,8 +47,32 @@
            [draw-spokes
             (lambda (theta)
               (image-draw-line! image col row
-                                (+ col (*  radius (sin theta) aspect-ratio))
-                                (+ row (* radius (cos theta)))))])
+                                (+ col (* radius (cos theta) aspect-ratio))
+                                (+ row (* radius (sin theta)))))])
       (for-each draw-spokes angles))))
 
+(define dragons-offset
+  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle iterations)
+    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> iterations)]
+           [degree-angles (map (compose
+                                (r-s + start-angle)
+                                (r-s * step-angle))
+                               (iota n))]
+           [rad-angles (map degrees->radians
+                            degree-angles)]
+           [offset-angles (map (r-s + offset-angle)
+                               degree-angles)]
+           [cols (map (compose
+                       (r-s + col)
+                       (r-s * radius)
+                       cos)
+                      rad-angles)]
+           [rows (map (compose
+                       (r-s + row)
+                       (r-s * radius)
+                       sin)
+                      rad-angles)])
+      (for-each draw-dragon cols rows offset-angles))))
 
+
+; Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6)
