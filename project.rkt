@@ -134,7 +134,7 @@
                         height
                         (car background-colors)
                         (cadr background-colors))])
-      0)))
+      background)))
       
     
 
