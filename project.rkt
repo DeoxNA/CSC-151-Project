@@ -135,7 +135,7 @@
                       rad-angles)])
       (for-each draw-dragon cols rows offset-angles))))
 
-; Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
+;Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
 
 
 ;aspect-ratio is horizontal / vertical
