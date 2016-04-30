@@ -112,7 +112,6 @@
                 (generate-steps iterations)))))
 
 
- 
 (define dragons-offset
   (lambda (turtle n col row radius step-length start-angle step-angle offset-angle iterations)
     (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> iterations)]
@@ -137,6 +136,7 @@
       (for-each draw-dragon cols rows offset-angles))))
  
 ; Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
+
 
 ;aspect-ratio is horizontal / vertical
 (define n-star
@@ -193,3 +193,9 @@
             [draw-stars
              (section n-star background 6 <> <> (/ width 40) 0 aspect-ratio)])
       (map draw-stars stars-x stars-y) background)))
+            [background (project-background (ceiling (/ (+ 1 (modulo n 15)) 5)) 
+                        width
+                        height
+                        (car background-colors)
+                        (cadr background-colors))])
+      0)))
