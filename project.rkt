@@ -125,19 +125,6 @@
                                                   (square width)))))))]))
                    width height)))
 
-(define image-series
-  (lambda (n width height)
-    (let* ([background-colors 
-            (background-color-helper (modulo n 5))]
-            [background (project-background (ceiling (/ (+ 1 (modulo n 15)) 5)) 
-                        width
-                        height
-                        (car background-colors)
-                        (cadr background-colors))])
-      0)))
-      
-    
-
 (define background-color-helper
   (lambda (n)
     (cond [(equal? n 0)
@@ -150,3 +137,23 @@
             (list (irgb 49 189 140) (irgb 52 66 134))]
           [(equal? n 4)
             (list (irgb 255 165 0) (irgb 87 22 17))])))
+
+(define chaos
+  (lambda (r x0 iterations)
+    (let kernel ([n 0]
+                 [xn x0])
+(if (equal? n iterations)
+    xn
+    (kernel (+ 1 n) (* r xn (- 1 xn))) 
+    ))))
+
+(define image-series
+  (lambda (n width height)
+    (let* ([background-colors 
+            (background-color-helper (modulo n 5))]
+            [background (project-background (ceiling (/ (+ 1 (modulo n 15)) 5)) 
+                        width
+                        height
+                        (car background-colors)
+                        (cadr background-colors))])
+      0)))
