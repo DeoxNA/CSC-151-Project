@@ -111,6 +111,33 @@
       (for-each move-dragon
                 (generate-steps iterations)))))
 
+
+ 
+(define dragons-offset
+  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle iterations)
+    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> iterations)]
+           [degree-angles (map (compose
+                                (r-s + start-angle)
+                                (r-s * step-angle))
+                               (iota n))]
+           [rad-angles (map degrees->radians
+                            degree-angles)]
+           [offset-angles (map (r-s + offset-angle)
+                               degree-angles)]
+           [cols (map (compose
+                       (r-s + col)
+                       (r-s * radius)
+                       cos)
+                      rad-angles)]
+           [rows (map (compose
+                       (r-s + row)
+                       (r-s * radius)
+                       sin)
+                      rad-angles)])
+      (for-each draw-dragon cols rows offset-angles))))
+ 
+; Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
+
 ;aspect-ratio is horizontal / vertical
 (define n-star
   (lambda (image n col row radius angle aspect-ratio)
