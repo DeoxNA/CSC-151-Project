@@ -1,6 +1,10 @@
 #lang racket
 (require gigls/unsafe)
 
+(define vector-length
+  (lambda (vec)
+    (sqrt (+ (square (car vec)) (square (cdr vec))))))
+
 (define canvas (image-show (image-new 1000 1000)))
 (define dragon (turtle-new canvas))
 
@@ -102,19 +106,41 @@
             (kernel (next-steps steps) (+ i 1)))))))
 
 (define dragon-curve
-  (lambda (turtle col row length angle iterations)
-    (let ([move-dragon
-           (lambda (step)
-             (turtle-face! turtle (+ step angle))
-             (turtle-forward! turtle length))])
+  (lambda (turtle col row length angle aspect-ratio iterations)
+    (let* ([vec-atan
+            (lambda (vec)
+              (let ([ratio (/ (cdr vec) (car vec))])
+              (if (< (car vec) 0)
+                  (+ pi (atan ratio))
+                  (atan ratio))))]
+           [rad-angle (degrees->radians angle)]
+           [unit-vector (cons (cos rad-angle) (sin rad-angle))]
+           [ortho-vector (cons (- (sin rad-angle))
+                               (cos rad-angle))]
+           [scaled-vector (cons (* (car unit-vector) length aspect-ratio)
+                                (* (cdr unit-vector) length))]
+           [scaled-ortho-vector (cons (* (car ortho-vector) length aspect-ratio)
+                                      (* (cdr ortho-vector) length))]
+           [rad-scale-angle (vec-atan scaled-vector)]
+           ;[scale-angle (round (radians->degrees rad-scale-angle))]
+           [scale-angle angle]
+           [len-start (vector-length scaled-vector)]
+           [len-orthogonal (vector-length scaled-ortho-vector)]
+           [move-dragon
+            (lambda (step)
+              (turtle-face! turtle (+ step scale-angle))
+              (if (or (= step 0) (= step 180))
+                  (turtle-forward! turtle len-start)
+                  (turtle-forward! turtle len-orthogonal)))])
+      (display (list scale-angle len-start len-orthogonal scaled-vector scaled-ortho-vector))(newline)
       (turtle-teleport! turtle col row)
       (for-each move-dragon
                 (generate-steps iterations)))))
 
 
 (define dragons-offset
-  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle iterations)
-    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> iterations)]
+  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle aspect-ratio iterations)
+    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> aspect-ratio iterations)]
            [degree-angles (map (compose
                                 (r-s + start-angle)
                                 (r-s * step-angle))
@@ -133,6 +159,7 @@
                        (r-s * radius)
                        sin)
                       rad-angles)])
+      (display offset-angles)(newline)
       (for-each draw-dragon cols rows offset-angles))))
 
 ;Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
