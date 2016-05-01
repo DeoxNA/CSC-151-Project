@@ -140,7 +140,8 @@
 
 ;aspect-ratio is horizontal / vertical
 (define n-star
-  (lambda (image n col row radius angle aspect-ratio)
+  (lambda (image n col row radius angle aspect-ratio color)
+    (context-set-fgcolor! color)
     (context-set-brush! "2. Hardness 100" 0.2)
     (let* ([rad-angle (degrees->radians angle)]
            [interior-angle (/ (* 2 pi) n)]
@@ -174,6 +175,7 @@
                (section + 2 opt <>))
               (iota x)))))
 
+
 (define image-series
   (lambda (n width height)
     (let* ([background-colors 
@@ -188,9 +190,14 @@
             (map (section * <> width 1/20) (star-coordinates 20 (+ n 0.1)))]
            [stars-y
             (map (section * <> height 1/20) (star-coordinates 20 n))]
+           [stars-color
+            (map (compose irgb-complement
+                          (section image-get-pixel background <> <>))
+                 stars-x
+                 stars-y)]
            ;w/40 means stars are just touching
            ;make stars not 7 points
            [draw-stars
-            (section n-star background 6 <> <> (/ width 40) 0 aspect-ratio)])
-      (map draw-stars stars-x stars-y) 
+            (section n-star background 6 <> <> (/ width 40) 0 aspect-ratio <>)])
+      (for-each draw-stars stars-x stars-y stars-color) 
       background)))
