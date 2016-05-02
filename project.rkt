@@ -82,21 +82,21 @@
 ;;; Produces
 ;;;   lst, a list
 ;;; Preconditions
-;;;   0 <= a <= 4
+;;;   0 <= a <= 4 [Unverified] 
 ;;; Postconditions
 ;;;   lst consists of 2 integer-encoded rgb colors depending on a.
 ;;;   The colors lst consists of are specifically coded into the procedure.
 (define background-color-helper
-  (lambda (n)
-    (cond [(equal? n 0)
+  (lambda (a)
+    (cond [(equal? a 0)
            (list (irgb 0 0 0) (irgb 86 29 116))]
-          [(equal? n 1)
+          [(equal? a 1)
            (list (irgb 234 37 17) (irgb 122 54 157))]
-          [(equal? n 2)
+          [(equal? a 2)
            (list (irgb 171 216 248) (irgb 48 72 189))]
           [(equal? n 3)
            (list (irgb 49 189 140) (irgb 52 66 134))]
-          [(equal? n 4)
+          [(equal? a 4)
            (list (irgb 255 165 0) (irgb 87 22 17))])))
 
 (define clear
