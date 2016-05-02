@@ -5,8 +5,8 @@
   (lambda (vec)
     (sqrt (+ (square (car vec)) (square (cdr vec))))))
 
-(define canvas (image-show (image-new 1000 1000)))
-(define dragon (turtle-new canvas))
+;(define canvas (image-show (image-new 1000 1000)))
+;(define dragon (turtle-new canvas))
 
 (define project-background
   (lambda (n width height color1 color2)
@@ -106,13 +106,13 @@
             (kernel (next-steps steps) (+ i 1)))))))
 
 (define dragon-curve
-  (lambda (turtle col row length angle aspect-ratio iterations)
+  (lambda (turtle col row length angle aspect-ratio iterations color)
     (let* ([vec-atan
             (lambda (vec)
               (let ([ratio (/ (cdr vec) (car vec))])
-              (if (< (car vec) 0)
-                  (+ pi (atan ratio))
-                  (atan ratio))))]
+                (if (< (car vec) 0)
+                    (+ pi (atan ratio))
+                    (atan ratio))))]
            [rad-angle (degrees->radians angle)]
            [unit-vector (cons (cos rad-angle) (sin rad-angle))]
            [ortho-vector (cons (- (sin rad-angle))
@@ -122,8 +122,8 @@
            [scaled-ortho-vector (cons (* (car ortho-vector) length aspect-ratio)
                                       (* (cdr ortho-vector) length))]
            [rad-scale-angle (vec-atan scaled-vector)]
-           ;[scale-angle (round (radians->degrees rad-scale-angle))]
-           [scale-angle angle]
+           [scale-angle (round (radians->degrees rad-scale-angle))]
+           ;[scale-angle angle]
            [len-start (vector-length scaled-vector)]
            [len-orthogonal (vector-length scaled-ortho-vector)]
            [move-dragon
@@ -132,15 +132,16 @@
               (if (or (= step 0) (= step 180))
                   (turtle-forward! turtle len-start)
                   (turtle-forward! turtle len-orthogonal)))])
-      (display (list scale-angle len-start len-orthogonal scaled-vector scaled-ortho-vector))(newline)
+      (turtle-set-color! turtle color)
+      (turtle-set-brush! turtle "2. Hardness 100" 0.2)
       (turtle-teleport! turtle col row)
       (for-each move-dragon
                 (generate-steps iterations)))))
 
 
 (define dragons-offset
-  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle aspect-ratio iterations)
-    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> aspect-ratio iterations)]
+  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle aspect-ratio iterations color)
+    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> aspect-ratio iterations <>)]
            [degree-angles (map (compose
                                 (r-s + start-angle)
                                 (r-s * step-angle))
@@ -158,9 +159,15 @@
                        (r-s + row)
                        (r-s * radius)
                        sin)
-                      rad-angles)])
-      (display offset-angles)(newline)
-      (for-each draw-dragon cols rows offset-angles))))
+                      rad-angles)]
+           [alternate-color
+            (lambda (n)
+              (if (even? n)
+                  color
+                  (irgb-add (irgb 32 32 32) color)))]
+           [colors (map alternate-color
+                    (iota n))])
+      (for-each draw-dragon cols rows offset-angles colors))))
 
 ;Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
 
@@ -174,7 +181,6 @@
            [interior-angle (/ (* 2 pi) n)]
            [angles (map (compose
                          (r-s + rad-angle)
-                         (r-s * interior-angle)
                          (r-s * interior-angle))
                         (iota n))]
            [draw-spokes
@@ -190,13 +196,12 @@
                  [xn x0])
       (if (equal? n iterations)
           xn
-          (kernel (+ 1 n) (* r xn (- 1 xn))) 
-          ))))
+          (kernel (+ 1 n) (* r xn (- 1 xn)))))))
 
-(define star-coordinates
-  (lambda (x opt)
+(define chaos-coordinates
+  (lambda (x opt divisions)
     (map (compose (r-s + 1)
-                  (r-s mod 19)
+                  (r-s mod (- divisions 1))
                   (section chaos 3.6 <> 6))
          (map (compose
                (section + 2 opt <>))
@@ -214,17 +219,29 @@
                                            (cadr background-colors))]
            [aspect-ratio (/ width height)]
            [stars-x
-            (map (section * <> width 1/20) (star-coordinates 20 (+ n 0.1)))]
+            (map (section * <> width 1/20) (chaos-coordinates 30 (+ n 0.1) 20))]
            [stars-y
-            (map (section * <> height 1/20) (star-coordinates 20 n))]
+            (map (section * <> height 1/20) (chaos-coordinates 30 n 20))]
            [stars-color
             (map (compose irgb-complement
                           (section image-get-pixel background <> <>))
                  stars-x
                  stars-y)]
            ;w/40 means stars are just touching
-           ;make stars not 7 points
-           [draw-stars
-            (section n-star background 6 <> <> (/ width 40) 0 aspect-ratio <>)])
-      (for-each draw-stars stars-x stars-y stars-color) 
+           [dragon (turtle-new background)]
+           [dragon-x
+            (* height 1/4 (car (chaos-coordinates 1 (+ n 0.1) 4)))]
+           [dragon-y
+            (* height 1/4 (car (chaos-coordinates 1 n 4)))]
+           [dragon-pixel (image-get-pixel background dragon-x dragon-y)]
+           [dragon-color
+            (hsv->irgb (hsv (modulo (round (+ 90 (irgb->hue dragon-pixel))) 360) 
+                       (irgb->saturation dragon-pixel)
+                       (- 1 (irgb->value dragon-pixel))))]
+           [twinkle 
+            (lambda (col row color)
+              (n-star background 10 col row (/ width 40) 0 aspect-ratio color)
+              (n-star background 10 col row (* (/ width 40) 0.8) (/ 360 20) aspect-ratio (irgb-add (irgb 16 16 16) color)))])
+      (for-each twinkle stars-x stars-y stars-color)
+      (dragons-offset dragon 4 dragon-x dragon-y 0 (/ height 75) 0 90 0 aspect-ratio 6 dragon-color)
       background)))
