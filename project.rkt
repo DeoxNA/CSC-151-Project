@@ -143,6 +143,11 @@
 (define dragon-spiral
   (lambda (turtle n col row radius step-length offset-angle aspect-ratio iterations color)
     (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> aspect-ratio iterations <>)]
+           [alternate-color
+            (lambda (n)
+              (if (even? n)
+                  color
+                  (irgb-add (irgb 32 32 32) color)))]
            [degree-angles (map (r-s * 90)
                                (iota n))]
            [rad-angles (map degrees->radians
@@ -159,11 +164,6 @@
                        (r-s * radius)
                        sin)
                       rad-angles)]
-           [alternate-color
-            (lambda (n)
-              (if (even? n)
-                  color
-                  (irgb-add (irgb 32 32 32) color)))]
            [colors (map alternate-color
                     (iota n))])
       (for-each draw-dragon cols rows offset-angles colors))))
@@ -174,8 +174,6 @@
 ;aspect-ratio is horizontal / vertical
 (define n-star
   (lambda (image n col row radius angle aspect-ratio color)
-    (context-set-fgcolor! color)
-    (context-set-brush! "2. Hardness 100" 0.1)
     (let* ([rad-angle (degrees->radians angle)]
            [interior-angle (/ (* 2 pi) n)]
            [angles (map (compose
@@ -187,6 +185,8 @@
               (image-draw-line! image col row
                                 (+ col (*  radius (sin theta) aspect-ratio))
                                 (+ row (* radius (cos theta)))))])
+      (context-set-brush! "2. Hardness 100" 0.1)
+      (context-set-fgcolor! color)
       (for-each draw-spokes angles))))
 
 (define chaos
