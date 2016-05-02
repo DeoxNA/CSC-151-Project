@@ -94,7 +94,7 @@
            (list (irgb 234 37 17) (irgb 122 54 157))]
           [(equal? a 2)
            (list (irgb 171 216 248) (irgb 48 72 189))]
-          [(equal? n 3)
+          [(equal? a 3)
            (list (irgb 49 189 140) (irgb 52 66 134))]
           [(equal? a 4)
            (list (irgb 255 165 0) (irgb 87 22 17))])))
@@ -123,18 +123,27 @@
 (define dragon-curve
   (lambda (turtle col row length angle aspect-ratio iterations color)
     (let* ([lengths (if (or (= angle 0) (= angle 180))
-                              (cons (* length aspect-ratio) length)
-                              (cons length (* length aspect-ratio)))]
+                        (cons (* length aspect-ratio) length)
+                        (cons length (* length aspect-ratio)))]
            [len-start (car lengths)]
            [len-orthogonal (cdr lengths)]
            [move-dragon
             (lambda (step)
               (turtle-face! turtle (+ step angle))
-              (if (or (= step 0) (= step 180))
-                  (turtle-forward! turtle len-start)
-                  (turtle-forward! turtle len-orthogonal)))])
+              (cond
+                ;Turtle will move in original direction
+                [(or (= step 0) (= step 180))
+                 (turtle-set-brush! turtle "2. Hardness 100" 0.1)
+                 (turtle-forward! turtle len-start)]
+                ;Turtle will move in orthogonal direction
+                ;Smallest brush is two pixels wide when 0.1
+                ;1 -> 4 px
+                ;0.1 -> 1px
+                
+                [else
+                 (turtle-set-brush! turtle "2. Hardness 100" 0.1)
+                 (turtle-forward! turtle len-orthogonal)]))])
       (turtle-set-color! turtle color)
-      (turtle-set-brush! turtle "2. Hardness 100" 0.1)
       (turtle-teleport! turtle col row)
       (for-each move-dragon
                 (generate-steps iterations)))))
@@ -165,7 +174,7 @@
                        sin)
                       rad-angles)]
            [colors (map alternate-color
-                    (iota n))])
+                        (iota n))])
       (for-each draw-dragon cols rows offset-angles colors))))
 
 ;Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
@@ -234,8 +243,8 @@
            [dragon-pixel (image-get-pixel background dragon-x dragon-y)]
            [dragon-color
             (hsv->irgb (hsv (modulo (round (+ 90 (irgb->hue dragon-pixel))) 360) 
-                       (irgb->saturation dragon-pixel)
-                       (- 1 (irgb->value dragon-pixel))))]
+                            (irgb->saturation dragon-pixel)
+                            (- 1 (irgb->value dragon-pixel))))]
            [twinkle 
             (lambda (col row color)
               (n-star background 10 col row (/ width 40) 0 aspect-ratio color)
