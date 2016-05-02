@@ -1,79 +1,94 @@
 #lang racket
 (require gigls/unsafe)
 
-(define vector-length
-  (lambda (vec)
-    (sqrt (+ (square (car vec)) (square (cdr vec))))))
+(define canvas (image-show (image-new 1000 1000)))
+(define dragon (turtle-new canvas))
 
-;(define canvas (image-show (image-new 1000 1000)))
-;(define dragon (turtle-new canvas))
-
+;;; Procedure
+;;;   Project-background
+;;; Parameters
+;;;   z, an integer
+;;;   width, an integer
+;;;   height, an integer
+;;;   color1, an integer-encoded rgb color
+;;;   color2, an integer-encoded rgb color
+;;; Purpose
+;;;   Creates a background image for our project, in the form of a color fade
+;;; Produces
+;;;   background, an image
+;;; Preconditions
+;;;   z = 1, 2, or 3
+;;;   width > 0 and height > 0
+;;; Postconditions
+;;;   background is a an image width wide and height high
+;;;   background is a color fade from color1 to color2
+;;;   If z = 1, background will be a vertical fade from color1 (top) to color2
+;;;   If z = 2, background fades from color1 (top right) to color2 (bottom left)
+;;;   If z = 3, background fades from color1 (top left) to color2 (bottom right)
+;;;   The color of an individual pixel varies directly with its row and column
+;;;   in relation to width and height
 (define project-background
-  (lambda (n width height color1 color2)
-    (image-compute (lambda (col row)
-                     (cond [(equal? n 1)
-                            (irgb (+ (irgb-red color1)
-                                     (* (- (irgb-red color2)
-                                           (irgb-red color1))
-                                        (/ row height)))
-                                  (+ (irgb-green color1)
-                                     (* (- (irgb-green color2)
-                                           (irgb-green color1))
-                                        (/ row height)))
-                                  (+ (irgb-blue color1)
-                                     (* (- (irgb-blue color2)
-                                           (irgb-blue color1))
-                                        (/ row height))))]
-                           [(equal? n 2)
-                            (irgb (+ (irgb-red color1)
-                                     (* (- (irgb-red color2)
-                                           (irgb-red color1))
-                                        (/ (sqrt (+ (square col)
-                                                    (square row)))
-                                           (sqrt (+ (square height)
-                                                    (square width))))))
-                                  (+ (irgb-green color1)
-                                     (* (- (irgb-green color2)
-                                           (irgb-green color1))
-                                        (/ (sqrt (+ (square col)
-                                                    (square row)))
-                                           (sqrt (+ (square height)
-                                                    (square width))))))
-                                  (+ (irgb-blue color1)
-                                     (* (- (irgb-blue color2)
-                                           (irgb-blue color1))
-                                        (/ (sqrt (+ (square col)
-                                                    (square row)))
-                                           (sqrt (+ (square height)
-                                                    (square width)))))))]
-                           [(equal? n 3)
-                            (irgb (+ (irgb-red color1)
-                                     (* (- (irgb-red color2)
-                                           (irgb-red color1))
-                                        (/ (sqrt (+ (square (- width col))
-                                                    (square row)))
-                                           (sqrt (+ (square height)
-                                                    (square width))))))
-                                  (+ (irgb-green color1)
-                                     (* (- (irgb-green color2)
-                                           (irgb-green color1))
-                                        (/ (sqrt (+ (square (- width col))
-                                                    (square row)))
-                                           (sqrt (+ (square height)
-                                                    (square width))))))
-                                  (+ (irgb-blue color1)
-                                     (* (- (irgb-blue color2)
-                                           (irgb-blue color1))
-                                        (/ (sqrt (+ (square (- width col))
-                                                    (square row)))
-                                           (sqrt (+ (square height)
-                                                    (square width)))))))]))
-                   width height)))
+  (lambda (z width height color1 color2)
+    (let* ([first-red (irgb-red color1)]
+           [first-green (irgb-green color1)]
+           [first-blue (irgb-blue color1)]
+           [second-red (irgb-red color2)]
+           [second-green (irgb-green color2)]
+           [second-blue (irgb-blue color2)])
+      (image-compute (lambda (col row)
+                       (let* ([1-pixel-change (/ row height)]
+                              [2-pixel-change (/ (sqrt (+ (square col)
+                                                          (square row)))
+                                                 (sqrt (+ (square height)
+                                                          (square width))))]
+                              [3-pixel-change (/ (sqrt (+ (square (- width col))
+                                                          (square row)))
+                                                 (sqrt (+ (square height)
+                                                          (square width))))])
+                         (cond [(equal? z 1)
+                                (irgb (+ first-red (* (- second-red first-red)
+                                                      1-pixel-change))
+                                      (+ first-green
+                                         (* (- second-green first-green)
+                                            1-pixel-change))
+                                      (+ first-blue 
+                                         (* (- second-blue first-blue)
+                                            1-pixel-change)))]
+                               [(equal? z 2)
+                                (irgb (+ first-red (* (- second-red first-red)
+                                                      2-pixel-change))
+                                      (+ first-green)
+                                      (* (- second-green first-green)
+                                         2-pixel-change))
+                                (+ first-blue (* (- second-blue first-blue)
+                                                 2-pixel-change))]
+                               [(equal? z 3)
+                                (irgb (+ first-red (* (- second-red first-red)
+                                                      3-pixel-change))
+                                      (+ first-green 
+                                         (* (- second-green first-green)
+                                            3-pixel-change))
+                                      (+ first-blue 
+                                         (* (- second-blue first-blue)
+                                            3-pixel-change)))])))
+                     width height))))
 
+;;; Procedure
+;;;   Background-color-helper
+;;; Parameters
+;;;   a, an integer
+;;; Purpose
+;;;   Generates a list of colors for Project-background
+;;; Produces
+;;;   lst, a list
+;;; Preconditions
+;;;   0 <= a <= 4
+;;; Postconditions
+;;;   lst consists of 2 integer-encoded rgb colors depending on a.
+;;;   The colors lst consists of are specifically coded into the procedure.
 (define background-color-helper
   (lambda (n)
     (cond [(equal? n 0)
-           ;(context-set-fgcolor! color)
            (list (irgb 0 0 0) (irgb 86 29 116))]
           [(equal? n 1)
            (list (irgb 234 37 17) (irgb 122 54 157))]
@@ -107,44 +122,28 @@
 
 (define dragon-curve
   (lambda (turtle col row length angle aspect-ratio iterations color)
-    (let* ([vec-atan
-            (lambda (vec)
-              (let ([ratio (/ (cdr vec) (car vec))])
-                (if (< (car vec) 0)
-                    (+ pi (atan ratio))
-                    (atan ratio))))]
-           [rad-angle (degrees->radians angle)]
-           [unit-vector (cons (cos rad-angle) (sin rad-angle))]
-           [ortho-vector (cons (- (sin rad-angle))
-                               (cos rad-angle))]
-           [scaled-vector (cons (* (car unit-vector) length aspect-ratio)
-                                (* (cdr unit-vector) length))]
-           [scaled-ortho-vector (cons (* (car ortho-vector) length aspect-ratio)
-                                      (* (cdr ortho-vector) length))]
-           [rad-scale-angle (vec-atan scaled-vector)]
-           [scale-angle (round (radians->degrees rad-scale-angle))]
-           ;[scale-angle angle]
-           [len-start (vector-length scaled-vector)]
-           [len-orthogonal (vector-length scaled-ortho-vector)]
+    (let* ([lengths (if (or (= angle 0) (= angle 180))
+                              (cons (* length aspect-ratio) length)
+                              (cons length (* length aspect-ratio)))]
+           [len-start (car lengths)]
+           [len-orthogonal (cdr lengths)]
            [move-dragon
             (lambda (step)
-              (turtle-face! turtle (+ step scale-angle))
+              (turtle-face! turtle (+ step angle))
               (if (or (= step 0) (= step 180))
                   (turtle-forward! turtle len-start)
                   (turtle-forward! turtle len-orthogonal)))])
       (turtle-set-color! turtle color)
-      (turtle-set-brush! turtle "2. Hardness 100" 0.2)
+      (turtle-set-brush! turtle "2. Hardness 100" 0.1)
       (turtle-teleport! turtle col row)
       (for-each move-dragon
                 (generate-steps iterations)))))
 
 
-(define dragons-offset
-  (lambda (turtle n col row radius step-length start-angle step-angle offset-angle aspect-ratio iterations color)
+(define dragon-spiral
+  (lambda (turtle n col row radius step-length offset-angle aspect-ratio iterations color)
     (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> aspect-ratio iterations <>)]
-           [degree-angles (map (compose
-                                (r-s + start-angle)
-                                (r-s * step-angle))
+           [degree-angles (map (r-s * 90)
                                (iota n))]
            [rad-angles (map degrees->radians
                             degree-angles)]
@@ -176,7 +175,7 @@
 (define n-star
   (lambda (image n col row radius angle aspect-ratio color)
     (context-set-fgcolor! color)
-    (context-set-brush! "2. Hardness 100" 0.2)
+    (context-set-brush! "2. Hardness 100" 0.1)
     (let* ([rad-angle (degrees->radians angle)]
            [interior-angle (/ (* 2 pi) n)]
            [angles (map (compose
@@ -207,7 +206,6 @@
                (section + 2 opt <>))
               (iota x)))))
 
-
 (define image-series
   (lambda (n width height)
     (let* ([background-colors 
@@ -230,7 +228,7 @@
            ;w/40 means stars are just touching
            [dragon (turtle-new background)]
            [dragon-x
-            (* height 1/4 (car (chaos-coordinates 1 (+ n 0.1) 4)))]
+            (* width 1/4 (car (chaos-coordinates 1 (+ n 0.1) 4)))]
            [dragon-y
             (* height 1/4 (car (chaos-coordinates 1 n 4)))]
            [dragon-pixel (image-get-pixel background dragon-x dragon-y)]
@@ -243,5 +241,5 @@
               (n-star background 10 col row (/ width 40) 0 aspect-ratio color)
               (n-star background 10 col row (* (/ width 40) 0.8) (/ 360 20) aspect-ratio (irgb-add (irgb 16 16 16) color)))])
       (for-each twinkle stars-x stars-y stars-color)
-      (dragons-offset dragon 4 dragon-x dragon-y 0 (/ height 75) 0 90 0 aspect-ratio 6 dragon-color)
+      (dragon-spiral dragon 4 dragon-x dragon-y 0 (/ height 75) 0 aspect-ratio 6 dragon-color)
       background)))
