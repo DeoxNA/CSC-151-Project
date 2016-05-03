@@ -113,7 +113,7 @@
             (kernel (next-steps steps) (+ i 1)))))))
 
 (define dragon-curve
-  (lambda (turtle col row length angle aspect-ratio iterations color)
+  (lambda (turtle col row length angle aspect-ratio color steps)
     (let* ([lengths (if (or (= angle 0) (= angle 180))
                         (cons (* length aspect-ratio) length)
                         (cons length (* length aspect-ratio)))]
@@ -134,15 +134,13 @@
                  (turtle-forward! turtle len-orthogonal)]))])
       (turtle-set-color! turtle color)
       (turtle-teleport! turtle col row)
-      (for-each move-dragon
-                (generate-steps iterations)))))
+      (for-each move-dragon steps))))
 
 
 (define dragon-spiral
-  (lambda (turtle n col row radius step-length offset-angle aspect-ratio 
-                  iterations color)
-    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> 
-                                 aspect-ratio iterations <>)]
+  (lambda (turtle n col row radius length aspect-ratio color steps)
+    (let* ([draw-dragon (section dragon-curve turtle <> <> length <> 
+                                 aspect-ratio <> steps)]
            [alternate-color
             (lambda (n)
               (if (even? n)
@@ -152,8 +150,6 @@
                                (iota n))]
            [rad-angles (map degrees->radians
                             degree-angles)]
-           [offset-angles (map (r-s + offset-angle)
-                               degree-angles)]
            [cols (map (compose
                        (r-s + col)
                        (r-s * radius)
@@ -166,7 +162,7 @@
                       rad-angles)]
            [colors (map alternate-color
                         (iota n))])
-      (for-each draw-dragon cols rows offset-angles colors))))
+      (for-each draw-dragon cols rows degree-angles colors))))
 
 ;aspect-ratio is horizontal / vertical
 (define n-star
@@ -241,6 +237,7 @@
                  stars-y)]
            ;w/40 means stars are just touching
            [dragon (turtle-new background)]
+           [dragon-steps (generate-steps 7)]
            [dragon-x
             (* width 1/4 (car (chaos-coordinates 1 (+ n 0.1) 4)))]
            [dragon-y
@@ -255,5 +252,7 @@
               (n-star background 10 col row (/ height 40) 0 aspect-ratio color)
               (n-star background 10 col row (* (/ height 40) 0.8) (/ 360 20) aspect-ratio (irgb-add (irgb 16 16 16) color)))])
       (for-each twinkle stars-x stars-y stars-color)
-      (dragon-spiral dragon 4 dragon-x dragon-y (* (/ height 16) (modulo n 4)) (/ height 75) 0 aspect-ratio 7 dragon-color)
+      (dragon-spiral dragon 4 dragon-x dragon-y (* (/ height 16) (modulo n 4)) (/ height 75) aspect-ratio dragon-color dragon-steps)
       background)))
+
+;425 FTW!
