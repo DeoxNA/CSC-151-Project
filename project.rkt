@@ -99,14 +99,6 @@
           [(equal? a 4)
            (list (irgb 255 165 0) (irgb 87 22 17))])))
 
-(define clear
-  (lambda (image)
-    (let ([current-color (context-get-fgcolor)])
-      (context-set-fgcolor! (irgb 255 255 255))
-      (image-select-all! image)
-      (image-fill-selection! image)
-      (image-select-nothing! image)
-      (context-set-fgcolor! current-color))))
 
 (define generate-steps
   (let* ([orthogonal (compose (r-s mod 360) (r-s + 90))]
