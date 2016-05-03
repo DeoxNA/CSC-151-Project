@@ -1,9 +1,6 @@
 #lang racket
 (require gigls/unsafe)
 
-(define canvas (image-show (image-new 1000 1000)))
-(define dragon (turtle-new canvas))
-
 ;;; Procedure
 ;;;   Project-background
 ;;; Parameters
@@ -57,11 +54,11 @@
                                [(equal? z 2)
                                 (irgb (+ first-red (* (- second-red first-red)
                                                       2-pixel-change))
-                                      (+ first-green)
+                                      (+ first-green
                                       (* (- second-green first-green)
                                          2-pixel-change))
-                                (+ first-blue (* (- second-blue first-blue)
-                                                 2-pixel-change))]
+                                      (+ first-blue (* (- second-blue first-blue)
+                                                       2-pixel-change)))]
                                [(equal? z 3)
                                 (irgb (+ first-red (* (- second-red first-red)
                                                       3-pixel-change))
@@ -70,7 +67,10 @@
                                             3-pixel-change))
                                       (+ first-blue 
                                          (* (- second-blue first-blue)
-                                            3-pixel-change)))])))
+                                            3-pixel-change)))]
+                               [else 
+                                (display z)
+                                (error "z is outside the range 1-3")])))
                      width height))))
 
 ;;; Procedure
@@ -133,15 +133,12 @@
               (cond
                 ;Turtle will move in original direction
                 [(or (= step 0) (= step 180))
-                 (turtle-set-brush! turtle "2. Hardness 100" 0.1)
+                 (turtle-set-brush! turtle "2. Hardness 100" (/ len-start 8))
                  (turtle-forward! turtle len-start)]
                 ;Turtle will move in orthogonal direction
-                ;Smallest brush is two pixels wide when 0.1
-                ;1 -> 4 px
-                ;0.1 -> 1px
-                
                 [else
-                 (turtle-set-brush! turtle "2. Hardness 100" 0.1)
+                 (turtle-set-brush! turtle "2. Hardness 100" 
+                                    (/ len-orthogonal 8))
                  (turtle-forward! turtle len-orthogonal)]))])
       (turtle-set-color! turtle color)
       (turtle-teleport! turtle col row)
@@ -150,8 +147,10 @@
 
 
 (define dragon-spiral
-  (lambda (turtle n col row radius step-length offset-angle aspect-ratio iterations color)
-    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> aspect-ratio iterations <>)]
+  (lambda (turtle n col row radius step-length offset-angle aspect-ratio 
+                  iterations color)
+    (let* ([draw-dragon (section dragon-curve turtle <> <> step-length <> 
+                                 aspect-ratio iterations <>)]
            [alternate-color
             (lambda (n)
               (if (even? n)
@@ -177,9 +176,6 @@
                         (iota n))])
       (for-each draw-dragon cols rows offset-angles colors))))
 
-;Sea weed? (dragons-offset dragon 3 500 500 200 15 240 30 0 6) 
-
-
 ;aspect-ratio is horizontal / vertical
 (define n-star
   (lambda (image n col row radius angle aspect-ratio color)
@@ -197,6 +193,23 @@
       (context-set-brush! "2. Hardness 100" 0.1)
       (context-set-fgcolor! color)
       (for-each draw-spokes angles))))
+
+;;; Procedure
+;;;   chaos
+;;; Parameters
+;;;   r, an integer
+;;;   x0, an integer
+;;;   iterations, an integer
+;;; Purpose 
+;;;   creates an unpredictable but repeatable number
+;;; Produces
+;;;   chaotic-number, an integer
+;;; Preconditions
+;;;   r >= 0
+;;;   iterations > 0
+;;; Postconditions
+;;;   chaotic-number is a very large integer, unpredictable from the initial 
+;;;   parameters
 
 (define chaos
   (lambda (r x0 iterations)
@@ -247,8 +260,8 @@
                             (- 1 (irgb->value dragon-pixel))))]
            [twinkle 
             (lambda (col row color)
-              (n-star background 10 col row (/ width 40) 0 aspect-ratio color)
-              (n-star background 10 col row (* (/ width 40) 0.8) (/ 360 20) aspect-ratio (irgb-add (irgb 16 16 16) color)))])
+              (n-star background 10 col row (/ height 40) 0 aspect-ratio color)
+              (n-star background 10 col row (* (/ height 40) 0.8) (/ 360 20) aspect-ratio (irgb-add (irgb 16 16 16) color)))])
       (for-each twinkle stars-x stars-y stars-color)
-      (dragon-spiral dragon 4 dragon-x dragon-y 0 (/ height 75) 0 aspect-ratio 6 dragon-color)
+      (dragon-spiral dragon 4 dragon-x dragon-y (* (/ height 16) (modulo n 4)) (/ height 75) 0 aspect-ratio 7 dragon-color)
       background)))
